@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "main": "server.js",
   "dependencies": {
-
+    "redis": "^2.3.1",
+    "q": "^1.4.1",
+    "merge": "^1.2.0"
   },
   "keywords": [],
   "author": "narfai",

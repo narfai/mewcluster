@@ -5,7 +5,8 @@ MAINTAINER Francois Cadeillan <francois@azsystem.fr>
 RUN groupadd -r nodecluster && useradd -r -g nodecluster nodecluster
 
 # Install packages (redis install redis-cli tool for maintenance)
-RUN pacman -S nodejs redis npm --noconfirm --noprogress
+RUN pacman -S nodejs redis npm python2 --noconfirm --noprogress
+RUN npm config --global set python /usr/bin/python2
 
 # Add and prepare cluster server data
 RUN mkdir -p /server/{pids,logs}
@@ -33,8 +34,11 @@ ENTRYPOINT  ["/entrypoint.sh"]
 # Setting working directory
 WORKDIR /server
 
+# Setting current user
+# USER nodecluster
+
 # Will listen on port 80 for http
-EXPOSE 80
+EXPOSE 8080
 
 # CMD always at the end of file cause we can only have one by file
 CMD ["load"]

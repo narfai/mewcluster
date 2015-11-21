@@ -1,9 +1,8 @@
 #!/bin/bash
 set -e
 
-if [ "$1" = 'redis-server' ]; then
-	chown -R redis .
-	exec gosu node server.js "$@"
+if [ "$1" = 'load' ]; then
+	exec gosu nodecluster node server.js "$@"
 fi
 
 exec "$@"

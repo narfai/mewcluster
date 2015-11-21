@@ -11,7 +11,7 @@
 docker run -t -i --rm \
    --name cluster_test \
    --link redis_test:redis \
-    -p 80:8080 \
+    -p 8080:80 \
     -v /home/narfai/tuxdata/docker/nodecluster/app:/app \
     -v /home/narfai/tuxdata/docker/nodecluster/server:/server \
     azsystem/nodecluster:0.0.1 \
