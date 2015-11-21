@@ -16,6 +16,7 @@ function HttpContent(s_name, h_context, i_code){
     self.name = s_name;
 
     self.encoding = 'utf8';
+    self.engine = ENGINE.FS;
 
     self.code = (typeof i_code === 'undefined')? 200 : i_code;
 }

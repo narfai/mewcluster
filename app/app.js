@@ -19,7 +19,7 @@ function get_static(s_path, h_context){
             o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {content:'hello world', title:'hello world'}));
             o_content.set_engine(HttpContent.prototype.ENGINE.JADE);
             break;
-        case 'loader.js':
+        case '/loader.js':
             o_content = new HttpContent('loader.js', m_merge(h_context));
             break;
         default:
