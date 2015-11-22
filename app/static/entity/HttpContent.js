@@ -10,15 +10,16 @@ var ENGINE = {
     JADE:2
 };
 
-function HttpContent(s_name, h_context, i_code){
+function HttpContent(s_name, h_context, s_type){
     var self = this;
     self.context = h_context;
     self.name = s_name;
 
+    self.code = 200;
     self.encoding = 'utf8';
     self.engine = ENGINE.FS;
 
-    self.code = (typeof i_code === 'undefined')? 200 : i_code;
+    self.type = (typeof s_type === 'undefined')? 'text/html' : s_type;
 }
 
 //Engine static definition
@@ -27,11 +28,17 @@ HttpContent.prototype.ENGINE = ENGINE;
 HttpContent.prototype.set_engine = function(i_engine){
     this.engine = i_engine;
 };
+HttpContent.prototype.set_code = function(i_code){
+    this.code = i_code;
+};
 HttpContent.prototype.set_encoding = function(s_encoding){
     this.encoding = s_encoding;
 };
 HttpContent.prototype.get_code = function(){
     return this.code;
+};
+HttpContent.prototype.get_type = function(){
+    return this.type;
 };
 
 HttpContent.prototype.render = function(){ //TODO make multi purpose renderer module
