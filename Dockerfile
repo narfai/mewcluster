@@ -5,7 +5,7 @@ MAINTAINER Francois Cadeillan <francois@azsystem.fr>
 RUN groupadd -r nodecluster && useradd -r -g nodecluster nodecluster
 
 # Install packages (redis install redis-cli tool for maintenance)
-RUN pacman -S nodejs redis npm python2 --noconfirm --noprogress
+RUN pacman -Sy nodejs redis npm python2 --noconfirm --noprogress
 RUN npm config --global set python /usr/bin/python2
 
 # Add and prepare cluster server data

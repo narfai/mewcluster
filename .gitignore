@@ -29,3 +29,6 @@
 ehthumbs.db
 Thumbs.db
 
+
+app/node_modules
+server/node_modules
