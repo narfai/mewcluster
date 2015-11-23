@@ -1,23 +1,20 @@
 'use strict';
-var m_cluster = require('cluster');
 
-function IpHashEngine(i_max) {
+function IpHashEngine(i_max, f_spawn) {
     var self = this;
     self.worker_pool = [];
     self.max = i_max;
+    self.spawn = f_spawn;
 }
 
-IpHashEngine.prototype.spawn = function(i_index){
+IpHashEngine.prototype._spawn = function(i_index){
     var self = this;
-    this.worker_pool[i_index] = m_cluster.fork();
-    this.worker_pool[i_index].on('exit', function(){
-        console.log('respawn worker #'+i_index);
-        self.spawn(i_index);
-    });
+    self.worker_pool[i_index] = this.spawn();
+
 };
 IpHashEngine.prototype.init = function(){
     for(var i = 0; i < this.max; i++){
-        this.spawn(i);
+        this._spawn(i);
     }
 };
 IpHashEngine.prototype.clear = function(){

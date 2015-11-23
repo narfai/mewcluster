@@ -1,16 +1,15 @@
 'use strict';
 
-var m_cluster = require('cluster');
-
-function RoundRobin(i_max) {
+function RoundRobin(i_max, f_spawn) {
     var self = this;
     self.worker_pool = [];
     self.max = i_max;
     self.current = 0;
+    self.spawn = f_spawn;
 }
 RoundRobin.prototype.init = function(){
     for(var i = 0; i < this.max; i++){
-        this.worker_pool.push(m_cluster.fork());
+        this.worker_pool.push(this.spawn());
     }
 };
 RoundRobin.prototype.clear = function(){

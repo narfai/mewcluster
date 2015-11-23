@@ -26,7 +26,7 @@ if(typeof process.env.REDIS_PORT_6379_TCP_PORT === 'undefined') {
 //var o_balancer = m_balancer.createServer(m_balancer.ENGINE.GROWTH, 100);
 //var o_balancer = m_balancer.createServer(m_balancer.ENGINE.ROUNDROBIN, 4);
 //var o_balancer = m_balancer.createServer(m_balancer.ENGINE.SINGLE, 0);
-var o_balancer = m_balancer.createServer(m_balancer.ENGINE.IPHASH, 4);
+var o_balancer = m_balancer.createServer(m_balancer.ENGINE.ROUNDROBIN, 4);
 
 
 o_balancer.set_server(function(b_reload, f_disconnect){
@@ -38,7 +38,7 @@ o_balancer.set_server(function(b_reload, f_disconnect){
 
     var o_internal_server = m_http.createServer(function(o_req, o_res){
         var s_path = m_url.parse(o_req.url).pathname;
-        console.log('Handle http internal request : ', s_path);
+        console.log('Handle http internal request : %s (PID #%s)', s_path, process.pid);
 
         App.get_static(s_path, {pid:process.pid})
             .then(function(o_content){
@@ -64,3 +64,24 @@ o_balancer.set_server(function(b_reload, f_disconnect){
     return o_internal_server;
 });
 o_balancer.listen(8080);
+
+//process.stdout.write("\x1b[1;1H\x1b[2J");
+//process.stdin.setEncoding('utf8');
+//
+//process.stdin.on('readable', function() {
+//    var chunk = process.stdin.read();
+//    if (chunk !== null) {
+//        process.stdout.write('data: ' + chunk);
+//    }
+//});
+//
+//process.stdin.on('end', function() {
+//    process.stdout.write('end');
+//});
+/*
+Créer une interface CLI qui permet :
+de voir les workers
+de voir les logs par onglets
+de tuer / relancer un worker
+
+*/

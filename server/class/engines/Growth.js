@@ -1,11 +1,12 @@
 'use strict';
 var m_cluster = require('cluster');
 
-function GrowthEngine(i_max) {
+function GrowthEngine(i_max, f_spawn) {
     var self = this;
     self.worker_by_ip = {};
     self.max = i_max;
     self.count = 0;
+    self.spawn = f_spawn;
 }
 
 GrowthEngine.prototype.init = function(){
@@ -20,14 +21,13 @@ GrowthEngine.prototype.get_worker = function(s_ip){
     var self = this;
     if(typeof self.worker_by_ip[s_ip] === 'undefined'){
         if(self.count < self.max) {
-            var o_worker = m_cluster.fork(),
+            var o_worker = self.spawn(),
                 i_worker_id = o_worker.id;
-            self.count++;
-            console.log('Create new worker #', o_worker.process.pid);
 
+            self.count++;
             self.worker_by_ip[s_ip] = i_worker_id;
-            o_worker.on('exit', function (o_worker, i_code, i_signal) {
-                console.log('The worker #', i_worker_id, ' which handle ', s_ip, ' die');
+
+            o_worker.on('exit', function () {
                 delete self.worker_by_ip[s_ip];
             });
             return o_worker;
@@ -35,7 +35,6 @@ GrowthEngine.prototype.get_worker = function(s_ip){
             throw new Error('Too much workers');
         }
     } else {
-        console.log('Giving request from ', s_ip, ' to living worker #', h_worker_ips[s_ip]);
         return m_cluster.workers[self.worker_by_ip];
     }
 };

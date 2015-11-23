@@ -1,20 +1,28 @@
 'use strict';
-//Primitive
-//s : string
-//i : float
-//f : function
-//ff : higher-order function
-//b : bool
-//Objects
-//o : object
-//h : simple hash object
-//a : simple array object
-//op : promise object
-//oc : object created by new
-//oi : interface object
-//Extend
-//<O><P> : O as object def, P as primitive def, ex : "as_" is an array object which handle mainly strings
-//e<D> : D as any prefix, vars loaded by "require"
+/*
+Naming convention
+
+Primitive :
+s : string
+i : float
+f : function
+ff : higher-order function
+b : bool
+
+Objects :
+o : object
+h : simple hash object
+a : simple array object
+op : promise object
+oc : object created by new()
+oi : interface object
+
+Extend :
+<O><P> : O as object def, P as primitive def, ex : "as_" is an array object which handle mainly strings
+e<D> : D as any prefix, vars loaded by "require"
+
+Class : camelcase
+*/
 //TODO implement in order : requirejs loading, socket.io, grunt watchers & other conveniences, r.js
 var HttpContent = require('./static/entity/HttpContent');
 var m_q = require('q');
