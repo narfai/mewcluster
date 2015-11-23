@@ -1,10 +1,16 @@
 'use strict';
 var m_cluster = require('cluster');
 
-function GrowthEngine(i_max, f_spawn) {
+var ef_merge = require('merge');
+function GrowthEngine(f_spawn, h_conf) {
     var self = this;
     self.worker_by_ip = {};
-    self.max = i_max;
+    var h_default_conf = {
+        max:50,
+        respawn:false,
+        timeout:240
+    };
+    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
     self.count = 0;
     self.spawn = f_spawn;
 }
@@ -20,7 +26,7 @@ GrowthEngine.prototype.clear = function(){
 GrowthEngine.prototype.get_worker = function(s_ip){
     var self = this;
     if(typeof self.worker_by_ip[s_ip] === 'undefined'){
-        if(self.count < self.max) {
+        if(self.count < self.conf.max) {
             var o_worker = self.spawn(),
                 i_worker_id = o_worker.id;
 
@@ -28,7 +34,11 @@ GrowthEngine.prototype.get_worker = function(s_ip){
             self.worker_by_ip[s_ip] = i_worker_id;
 
             o_worker.on('exit', function () {
-                delete self.worker_by_ip[s_ip];
+                if(self.conf.autorespawn) {
+                    delete self.worker_by_ip[s_ip];
+                } else {
+                    self.worker_by_ip[s_ip] = self.spawn();
+                }
             });
             return o_worker;
         } else {

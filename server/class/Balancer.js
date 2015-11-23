@@ -16,14 +16,8 @@ var oc_notifier = require('./Notifier')('balancer', function(OUTPUTS){
 //    h_data = {};
 //    return [s_message, h_data];
 //});
-function Balancer(i_engine, i_max, b_auto_restart){
+function Balancer(){
     var self = this;
-    self.max = (typeof i_max === 'undefined')? 100 : i_max;
-    self.auto_restart = (typeof b_auto_restart === 'undefined')? false : b_auto_restart;
-
-    self.engine_code = i_engine;
-    self.engine = false;
-    self.server_init = false;
 }
 Balancer.__proto__.ENGINE = {
     GROWTH : 1,
@@ -32,24 +26,26 @@ Balancer.__proto__.ENGINE = {
     IPHASH : 4
 };
 
-Balancer.prototype.set_server = function(f_server_init){
-    this.server_init = f_server_init;
-};
-
 Balancer.prototype.spawn = function(){
     var self = this,
-        o_worker = m_cluster.fork();
+        o_worker = m_cluster.fork(),
+        i_worker_id = o_worker.id;
 
     oc_notifier.worker('Spawn #'+o_worker.id+'(PID : #'+o_worker.process.pid+')');
 
     o_worker.on('exit', function(o_worker, i_code, s_signal){
-        oc_notifier.worker('Worker #'+i_worker_id+' die with signal '+s_signal+' #'+i_code);
+        oc_notifier.worker('#'+i_worker_id+' die with signal');
     });
 
     return o_worker;
 };
-
-Balancer.prototype.load_engine = function(i_engine){
+/**
+ *
+ * @param i_engine
+ * @param h_engine_conf ({max:0, auto})
+ */
+Balancer.prototype.load_engine = function(i_engine, h_engine_conf){
+    console.log(i_engine);
     var Engine;
     switch(i_engine){
         case Balancer.ENGINE.GROWTH :
@@ -69,17 +65,14 @@ Balancer.prototype.load_engine = function(i_engine){
             oc_notifier.info('Load IPHASH engine', {'code':Balancer.ENGINE.IPHASH});
             break;
         default:
-            throw new Error('Invalid engine : ', i_engine);
+            throw new Error('Invalid engine : '+i_engine);
     }
-    this.engine = new Engine(this.max, Balancer.prototype.spawn.bind(this));
+    this.engine = new Engine(Balancer.prototype.spawn.bind(this), h_engine_conf);
 };
-Balancer.prototype._load_front_server = function(i_port){
+Balancer.prototype.listen = function(i_port){
     var self = this;
-    if(!self.server_init){
-        throw new Error('No server to balance !');
-    }
-    self.load_engine(self.engine_code);
-    self.engine.init();
+
+    this.engine.init();
 
     oc_notifier.info('Start front server on port '+i_port);
 
@@ -96,9 +89,8 @@ Balancer.prototype._load_front_server = function(i_port){
 
     o_front_server.listen(i_port);
 };
-Balancer.prototype._load_internal_server = function(){
-    var o_internal_server = this.server_init();
-    oc_notifier.internal('Start internal server on process #'+process.pid);
+Balancer.prototype.bind_internal = function(o_internal_server){
+    oc_notifier.internal('Start internal server on worker #'+m_cluster.worker.id+' (PID #'+process.pid+')');
 
     if(!(o_internal_server instanceof m_net.Server ) ){
         throw new Error('Invalid server');
@@ -114,27 +106,16 @@ Balancer.prototype._load_internal_server = function(){
             return;
         }
 
-        oc_notifier.internal('Relay connection from '+o_conn.remoteAddress+' on process #'+process.pid);
+        oc_notifier.internal('Relay connection from '+o_conn.remoteAddress+' on worker #'+m_cluster.worker.id+'(PID #'+process.pid+')');
         o_internal_server.emit('connection', o_conn);
 
         o_conn.resume();
     });
 };
-Balancer.prototype.listen = function(i_port){
-    if (m_cluster.isMaster) {
-        this._load_front_server(i_port);
-    } else {
-        this._load_internal_server();
-    }
-};
+var o_balancer = new Balancer();
 module.exports = {
-    createServer: function(i_engine, i_max){
-        var o_balancer = new Balancer(i_engine, i_max);
-
-        return {
-            set_server:o_balancer.set_server.bind(o_balancer),
-            listen:o_balancer.listen.bind(o_balancer)
-        };
-    },
+    load_engine:o_balancer.load_engine.bind(o_balancer),
+    listen:o_balancer.listen.bind(o_balancer),
+    bind_internal:o_balancer.bind_internal.bind(o_balancer),
     ENGINE: Balancer.ENGINE
 };

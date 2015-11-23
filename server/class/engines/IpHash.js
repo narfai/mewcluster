@@ -1,19 +1,27 @@
 'use strict';
 
-function IpHashEngine(i_max, f_spawn) {
+var ef_merge = require('merge');
+
+function IpHashEngine(f_spawn, h_conf) {
     var self = this;
     self.worker_pool = [];
-    self.max = i_max;
+    var h_default_conf = {
+        max:5,
+        respawn:true,//TODO
+        timeout:0//TODO
+    };
+    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
     self.spawn = f_spawn;
 }
 
 IpHashEngine.prototype._spawn = function(i_index){
     var self = this;
     self.worker_pool[i_index] = this.spawn();
+    //TODO respawn & timout
 
 };
 IpHashEngine.prototype.init = function(){
-    for(var i = 0; i < this.max; i++){
+    for(var i = 0; i < this.conf.max; i++){
         this._spawn(i);
     }
 };
@@ -38,7 +46,7 @@ IpHashEngine.prototype.get_worker = function(s_ip){
         }
     }
     s = remove_ipv6(s);
-    var i_index = Number(s) % this.max;
+    var i_index = Number(s) % this.conf.max;
 
     return this.worker_pool[i_index];
 };

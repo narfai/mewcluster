@@ -11,6 +11,6 @@ module.exports = function(s_name, s_target, s_message, h_data){
         s_file_name = util.format('%s%s%s.log', LOG_DIR, s_name.toLocaleLowerCase(), s_file_date),
 
         s_log_date = util.format('%s:%s:%s', oc_date.getHours(), oc_date.getMinutes(), oc_date.getSeconds()),
-        s_log_line = util.format('[%s][%s][%s][%s]%s', s_log_date, s_target, s_message, util.inspect(h_data), os.EOL);
+        s_log_line = util.format('[%s][%s][%s][%s]%s', s_log_date, s_target, s_message, Object.keys(h_data).length? util.inspect(h_data): '', os.EOL);
     fs.appendFile(path.resolve(__dirname, s_file_name), s_log_line, 'utf8');
 };

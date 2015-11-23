@@ -47,7 +47,7 @@ var get_static = function(s_path, h_context){//TODO create a real static router
             o_content = new HttpContent('loader.js', m_merge(h_context), 'application/javascript');
             break;
         default:
-            o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {content:'404 - Not found', title:'404 - Not found'}));
+            o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {content:'Oh nooooon ! 404 - Not found', title:'404 - Not found'}));
             o_content.set_engine(HttpContent.ENGINE.JADE);
             o_content.set_code(404);
             break;
