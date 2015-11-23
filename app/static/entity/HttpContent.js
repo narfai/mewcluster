@@ -5,11 +5,6 @@ var m_jade = require('jade');
 var m_q = require('q');
 var m_path = require('path');
 
-var ENGINE = {
-    FS:1,
-    JADE:2
-};
-
 function HttpContent(s_name, h_context, s_type){
     var self = this;
     self.context = h_context;
@@ -17,13 +12,16 @@ function HttpContent(s_name, h_context, s_type){
 
     self.code = 200;
     self.encoding = 'utf8';
-    self.engine = ENGINE.FS;
+    self.engine = HttpContent.ENGINE.FS;
 
     self.type = (typeof s_type === 'undefined')? 'text/html' : s_type;
 }
 
 //Engine static definition
-HttpContent.prototype.ENGINE = ENGINE;
+HttpContent.__proto__.ENGINE = {
+    FS:1,
+    JADE:2
+};
 
 HttpContent.prototype.set_engine = function(i_engine){
     this.engine = i_engine;
@@ -51,7 +49,7 @@ HttpContent.prototype.render = function(){ //TODO make multi purpose renderer mo
         } else if(!stats.isFile()){
             o_defer.reject('Specified path is not a file');
         } else {
-            if (self.engine === self.ENGINE.FS) {
+            if (self.engine === HttpContent.ENGINE.FS) {
                 m_fs.readFile(s_content_path, self.encoding, function (err, data) {
                     if (err) {
                         o_defer.reject(err);
@@ -59,7 +57,7 @@ HttpContent.prototype.render = function(){ //TODO make multi purpose renderer mo
                         o_defer.resolve(data);
                     }
                 });
-            } else if (self.engine === self.ENGINE.JADE) {
+            } else if (self.engine === HttpContent.ENGINE.JADE) {
                 var f_compiled_content = m_jade.compileFile(s_content_path, {
                     cache:true
                 });
