@@ -1,14 +1,12 @@
 'use strict';
 
-//Master / Worker common dependencies
-
-//Have to handle clustering
+//Have to handle clustering (both Master and Worker)
 var m_cluster = require('cluster');
 
-//Have to handle balancing
+//Have to handle balancing (both Master and Worker)
 var m_balancer = require('./class/Balancer');
 
-//Have to handle notification and logging
+//Have to handle notification and logging (both Master and Worker)
 var oc_notifier = require('./class/Notifier')('app', function(OUTPUTS){
     return {
         info:[OUTPUTS.STDOUT],
@@ -33,22 +31,15 @@ if(m_cluster.isMaster) {
     m_balancer.listen({
         port:8080,
         engine:m_balancer.ENGINE.IPHASH,
-        timeout:0,
+        timeout:2000,
         engine_conf:{
-            max:5,
+            max:2,
             respawn:false
         }
     });
 
 } else {
 //This code should be executed from one to many times on a Worker process
-    var o_app_emitter = m_balancer.get_app_emitter();
-
-    //Triggered instead killing process
-    process.on('uncaughtException', function (o_error) {
-        //Let Master handle Worker error (it may restart it if needed)
-        o_app_emitter.send_panic(o_error);
-    });
 
     //Have to handle HTTP
     var m_http = require('http');
@@ -65,6 +56,16 @@ if(m_cluster.isMaster) {
     //Our application
     var App = require('../app/app');
 
+    //Get App Emitter
+    var o_app_emitter = m_balancer.get_app_emitter();
+
+    //Triggered instead killing process
+    process.on('uncaughtException', function (o_error) {
+        //Let Master handle Worker error (it may restart it if needed)
+        o_app_emitter.send_panic(o_error);
+    });
+
+
     //Create HTTP server
     var o_internal_server = m_http.createServer(function (o_req, o_res) {
         var s_path = m_url.parse(o_req.url).pathname;
@@ -75,23 +76,17 @@ if(m_cluster.isMaster) {
         //Static http request handling by application
         //App have to send it bootload html + js code before having two-way communications
         App.get_static(s_path, {pid: process.pid}) //Have to return a promise
-            .then(function (o_content) {
-
-                //Split HttpContent object
+            .then(function (o_content) { //Split HttpContent object
                 return [o_content.render(), o_content.get_code(), o_content.get_type()];
             })
-            .spread(function (s_content, i_code, s_type) {
-
-                //Send HttpContent to client
+            .spread(function (s_content, i_code, s_type) { //Send HttpContent to client
                 o_res.writeHead(i_code, {
                     'Content-Type': s_type,
                     'Content-Length': s_content.length
                 });
                 o_res.write(s_content);
                 o_res.end();
-            }).catch(function(o_error) {
-
-                //On any error or reject, send 500 error
+            }).catch(function(o_error) { //On any error or reject, send 500 error
                 o_res.writeHead(500);
                 o_res.write(o_error.toString());
                 o_res.end();
@@ -108,7 +103,7 @@ if(m_cluster.isMaster) {
     }));
 
     //Instanciate our application. Have to be before "bind_internal" allow app listeners to be triggered before server one's in event queue
-    var o_app = new App(o_app_emitter);
+    var o_app = new App(o_app_emitter, oc_notifier);
 
     //Allow balancer to relay TCP connexions to our internal server
     m_balancer.bind_internal(o_internal_server, o_app_emitter);

@@ -58,15 +58,17 @@ Balancer.__proto__.ENGINE = {
     IPHASH : 4
 };
 Balancer.prototype.set_worker_timeout = function(o_worker){
-    var self = this;
-    if(self.timeout !== 0){
-        if(typeof self.timeouts[o_worker.id] !== 'undefined'){
-           clearTimeout(self.timeouts[o_worker.id]);
+    if(m_cluster.isMaster) {
+        var self = this;
+        if (self.timeout !== 0) {
+            if (typeof self.timeouts[o_worker.id] !== 'undefined') {
+                clearTimeout(self.timeouts[o_worker.id]);
+            }
+            self.timeouts[o_worker.id] = setTimeout(function () {
+                oc_notifier.master_debug('Worker #' + o_worker.id + ' has reached his timeout');
+                self.exit(o_worker);
+            }, this.timeout);
         }
-        self.timeouts[o_worker.id] = setTimeout(function(){
-            oc_notifier.master_debug('Worker #'+o_worker.id+' has reached his timeout');
-            self.exit(o_worker);
-        }, this.timeout);
     }
 };
 /**
@@ -248,15 +250,21 @@ Balancer.prototype.get_app_emitter = function(){
         var o_emitter = new EventEmitter();
 
         //Relay Worker to Master messages
-        o_emitter.addListener('heartbeat', self.heartbeat.bind(self, m_cluster.worker));
-        o_emitter.addListener('panic', self.panic.bind(self, m_cluster.worker));
+        o_emitter.addListener('heartbeat', function(){
+            self.heartbeat(m_cluster.worker);
+        });
+        o_emitter.addListener('panic', function(){
+            self.panic(m_cluster.worker);
+        });
 
         //Internal event
         o_emitter.addListener('exit', function(){
+
             //Exit at the end of event queue
             o_emitter.addListener('clear', function(){
                 self.exit(m_cluster.worker);
             });
+
             //Call all clear listener and exit
             o_emitter.emit('clear');
         });
@@ -272,7 +280,7 @@ Balancer.prototype.get_app_emitter = function(){
                 o_emitter.addListener('clear', f_callback)
             },
             send_heartbeat:function(){
-                o_emitter.emit('hearbeat');
+                o_emitter.emit('heartbeat');
             },
             send_panic:function(o_error){
                 o_emitter.emit('panic', o_error);
@@ -289,8 +297,8 @@ Balancer.prototype.get_app_emitter = function(){
  * @param {Worker}o_worker
  */
 Balancer.prototype.heartbeat = function(o_worker){
-    if(o_worker.isWorker){
-        oc_notifier.worker_debug('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send hearbeat to master');
+    if(m_cluster.isWorker){
+        oc_notifier.worker_debug('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send heartbeat to master');
         o_worker.send('heartbeat');
     } else {
         this.set_worker_timeout(o_worker);
@@ -305,12 +313,14 @@ Balancer.prototype.panic = function(o_worker, o_error){
     if(m_cluster.isWorker){
         oc_notifier.worker_error('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send panic due to fatal error : ' + o_error.toString(), {error:o_error});
         if(o_worker.isConnected) {
+
             //Let master handle panic
             o_worker.send('panic');
         } else {
             process.exit(1);
         }
     } else {
+
         //Kill it
         o_worker.kill();
     }
@@ -329,6 +339,7 @@ Balancer.prototype.exit = function(o_worker){
         }
         process.exit(0);
     } else {
+
         //Tell worker to exit
         o_worker.send('exit');
     }

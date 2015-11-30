@@ -29,10 +29,11 @@ var m_q = require('q');
 var m_merge = require('merge');
 var m_redis = require('redis');
 
-function TestingApp(h_server_api){
-    //setTimeout(function(){
-    //    throw new Error('Simulation of app crash after 5s')
-    //}, 5000);
+function TestingApp(o_server_events, oc_notifier){
+    setInterval(function(){
+        oc_notifier.debug('App heartbeat');
+        o_server_events.send_heartbeat();
+    }, 1500);
 }
 TestingApp.__proto__.get_static = function(s_path, h_context){//TODO create a real static router
     var o_defer = m_q.defer();
