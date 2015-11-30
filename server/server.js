@@ -1,19 +1,26 @@
 'use strict';
 
-//TODO find a way to restart worker of application if it change
-//TODO OR create an app script for developpement purpose
-//TODO fucking naming conventions which take care of scope and types
+//Master / Worker common dependencies
 
-
+//Have to handle clustering
 var m_cluster = require('cluster');
+
+//Have to handle balancing
 var m_balancer = require('./class/Balancer');
 
-//m_balancer.set_engine(m_balancer.ENGINE.SINGLE);
-m_balancer.load_engine(m_balancer.ENGINE.GROWTH, { //Engine overrides
-    max:60,
-    timeout:500
+//Have to handle notification and logging
+var oc_notifier = require('./class/Notifier')('app', function(OUTPUTS){
+    return {
+        info:[OUTPUTS.STDOUT],
+        error:[OUTPUTS.FILE, OUTPUTS.STDERR],
+        debug:[OUTPUTS.FILE, OUTPUTS.STDERR]
+    };
 });
+
 if(m_cluster.isMaster) {
+//This code should be executed only once on a Master process
+
+    //Check Docker ENV
     if (typeof process.env.REDIS_PORT_6379_TCP_ADDR === 'undefined') {
         throw new Error('Invalid redis env');
     }
@@ -21,60 +28,90 @@ if(m_cluster.isMaster) {
     if (typeof process.env.REDIS_PORT_6379_TCP_PORT === 'undefined') {
         throw new Error('Invalid redis env');
     }
-    console.log('cOIN!!');
-    // m_balancer.createServer(m_balancer.ENGINE.GROWTH, 100).listen(8080);
-    //m_balancer.createServer(m_balancer.ENGINE.ROUNDROBIN, 30).listen(8080);
-    m_balancer.listen(8080);
-    //m_balancer.createServer(m_balancer.ENGINE.IpHash, 100).listen(8080);
+
+    //Proxy listen for TCP requests
+    m_balancer.listen({
+        port:8080,
+        engine:m_balancer.ENGINE.IPHASH,
+        timeout:0,
+        engine_conf:{
+            max:5,
+            respawn:false
+        }
+    });
 
 } else {
+//This code should be executed from one to many times on a Worker process
+    var o_app_emitter = m_balancer.get_app_emitter();
+
+    //Triggered instead killing process
+    process.on('uncaughtException', function (o_error) {
+        //Let Master handle Worker error (it may restart it if needed)
+        o_app_emitter.send_panic(o_error);
+    });
+
+    //Have to handle HTTP
     var m_http = require('http');
+
+    //Have to handle absctract sockets
     var m_socket_io = require('socket.io');
+
+    //Needed to get per-user session through redis
     var m_socket_io_redis = require('socket.io-redis');
+
+    //Have to parse some urls
     var m_url = require('url');
 
+    //Our application
     var App = require('../app/app');
-    //var f_exit = function(){
-    //    process.exit(0);
-    //};
-    //var i_timeout_ms = 200;//240000;
-    //var o_timeout = setTimeout(f_exit, i_timeout_ms);
+
+    //Create HTTP server
     var o_internal_server = m_http.createServer(function (o_req, o_res) {
         var s_path = m_url.parse(o_req.url).pathname;
-        console.log('Handle http internal request : %s (PID #%s)', s_path, process.pid);
+        oc_notifier.debug('Handle http internal request : %s (PID #%s)', s_path, process.pid);
 
-        //clearTimeout(o_timeout);
-        //o_timeout = setTimeout(f_exit, i_timeout_ms);
+        o_app_emitter.send_heartbeat();
 
-        App.get_static(s_path, {pid: process.pid})
+        //Static http request handling by application
+        //App have to send it bootload html + js code before having two-way communications
+        App.get_static(s_path, {pid: process.pid}) //Have to return a promise
             .then(function (o_content) {
+
+                //Split HttpContent object
                 return [o_content.render(), o_content.get_code(), o_content.get_type()];
             })
             .spread(function (s_content, i_code, s_type) {
+
+                //Send HttpContent to client
                 o_res.writeHead(i_code, {
                     'Content-Type': s_type,
                     'Content-Length': s_content.length
                 });
                 o_res.write(s_content);
                 o_res.end();
-            }).fail(function (s_reason) {
+            }).catch(function(o_error) {
+
+                //On any error or reject, send 500 error
                 o_res.writeHead(500);
-                o_res.write(s_reason);
+                o_res.write(o_error.toString());
                 o_res.end();
             });
     }).listen(0, 'localhost');
 
+    //Bind abstract socket to http server
     var o_io = m_socket_io(o_internal_server);
+
+    //Bind redis socket per-user session
     o_io.adapter(m_socket_io_redis({
         host: process.env.REDIS_PORT_6379_TCP_ADDR,
         port: process.env.REDIS_PORT_6379_TCP_PORT
     }));
 
-    //o_io.on('connection',function(){
-    //    clearTimeout(o_timeout);
-    //    o_timeout = setTimeout(f_exit, i_timeout_ms);
-    //});
-    m_balancer.bind_internal(o_internal_server);
+    //Instanciate our application. Have to be before "bind_internal" allow app listeners to be triggered before server one's in event queue
+    var o_app = new App(o_app_emitter);
+
+    //Allow balancer to relay TCP connexions to our internal server
+    m_balancer.bind_internal(o_internal_server, o_app_emitter);
 }
 //process.stdout.write("\x1b[1;1H\x1b[2J");
 //process.stdin.setEncoding('utf8');

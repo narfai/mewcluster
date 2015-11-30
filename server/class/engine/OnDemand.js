@@ -1,29 +1,28 @@
 'use strict';
-var m_cluster = require('cluster');
 
-var ef_merge = require('merge');
-function GrowthEngine(f_spawn, h_conf) {
-    var self = this;
-    self.worker_by_ip = {};
-    var h_default_conf = {
-        max:50,
-        respawn:false,
-        timeout:240
-    };
-    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
-    self.count = 0;
+const m_cluster = require('cluster');
+const ef_merge = require('merge');
+
+function OnDemandEngine(f_spawn, h_conf) {
+    var self = this,
+        h_default_conf = {
+            max:50,
+            respawn:false
+        };
+
     self.spawn = f_spawn;
+    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
+
+    self.worker_by_ip = {};
+    self.count = 0;
 }
 
-GrowthEngine.prototype.init = function(){
+
+OnDemandEngine.prototype.init = function(){
 
 };
-GrowthEngine.prototype.clear = function(){
-    this.worker_by_ip = {};
-    this.count = 0;
-};
 
-GrowthEngine.prototype.get_worker = function(s_ip){
+OnDemandEngine.prototype.get_worker = function(s_ip){
     var self = this;
     if(typeof self.worker_by_ip[s_ip] === 'undefined'){
         if(self.count < self.conf.max) {
@@ -33,11 +32,12 @@ GrowthEngine.prototype.get_worker = function(s_ip){
             self.count++;
             self.worker_by_ip[s_ip] = i_worker_id;
 
-            o_worker.on('exit', function () {
-                if(self.conf.autorespawn) {
-                    delete self.worker_by_ip[s_ip];
-                } else {
+            o_worker.on('exit', function(o_worker){
+                if(o_worker.suicide && (self.conf.respawn === true)) {
                     self.worker_by_ip[s_ip] = self.spawn();
+                } else {
+                    delete self.worker_by_ip[s_ip];
+                    self.count--;
                 }
             });
             return o_worker;
@@ -49,4 +49,4 @@ GrowthEngine.prototype.get_worker = function(s_ip){
     }
 };
 
-module.exports = GrowthEngine;
+module.exports = OnDemandEngine;

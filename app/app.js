@@ -19,7 +19,7 @@ oi : interface object
 
 Extend :
 <O><P> : O as object def, P as primitive def, ex : "as_" is an array object which handle mainly strings
-e<D> : D as any prefix, vars loaded by "require"
+r<D> : D as any prefix, const vars loaded by "require"
 
 Class : camelcase
 */
@@ -29,30 +29,43 @@ var m_q = require('q');
 var m_merge = require('merge');
 var m_redis = require('redis');
 
-function TestingApp(){
-    console.log('TestingApp loaded on worker #'+process.pid);
+function TestingApp(h_server_api){
+    //setTimeout(function(){
+    //    throw new Error('Simulation of app crash after 5s')
+    //}, 5000);
 }
-var get_static = function(s_path, h_context){//TODO create a real static router
+TestingApp.__proto__.get_static = function(s_path, h_context){//TODO create a real static router
     var o_defer = m_q.defer();
     if(typeof h_context === 'undefined'){
         h_context = {};
     }
     var o_content;
-    switch(s_path){
-        case '/':
-            o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {content:'hello world', title:'hello world'}));
-            o_content.set_engine(HttpContent.ENGINE.JADE);
-            break;
-        case '/loader.js':
-            o_content = new HttpContent('loader.js', m_merge(h_context), 'application/javascript');
-            break;
-        default:
-            o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {content:'Oh nooooon ! 404 - Not found', title:'404 - Not found'}));
-            o_content.set_engine(HttpContent.ENGINE.JADE);
-            o_content.set_code(404);
-            break;
+    try {
+        switch (s_path) {
+            case '/':
+                o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {
+                    content: 'hello world',
+                    title: 'hello world'
+                }));
+                o_content.set_engine(HttpContent.ENGINE.JADE);
+                break;
+            case '/loader.js':
+                o_content = new HttpContent('loader.js', m_merge(h_context), 'application/javascript');
+                break;
+            default:
+                o_content = new HttpContent('overlay.html.jade', m_merge(h_context, {
+                    content: 'Oh nooooon ! 404 - Not found',
+                    title: '404 - Not found'
+                }));
+                o_content.set_engine(HttpContent.ENGINE.JADE);
+                o_content.set_code(404);
+                break;
+        }
+        o_defer.resolve(o_content);
+    } catch(o_err){
+        o_defer.reject(o_err);
     }
-    o_defer.resolve(o_content);
+
     return o_defer.promise;
 };
 //console.log(process.env);
@@ -65,9 +78,4 @@ var get_static = function(s_path, h_context){//TODO create a real static router
 //    console.log('Redis['+s_redis_ip+':'+i_redis_port+'] error : ' + s_err);
 //});
 
-module.exports = {
-    get_static : get_static,
-    init:function(o_io){
-
-    }
-};
+module.exports = TestingApp;

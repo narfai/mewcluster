@@ -41,13 +41,13 @@ Notifier.prototype.notify = function(s_target, s_message, h_data){
     for(var i = 0; i < this.targets[s_target].length; i++){
         switch (this.targets[s_target][i]){
             case Notifier.OUTPUT.FILE:
-                require('./outputs/file.js')(this.name, s_target, s_message, h_data);
+                require('./output/file.js')(this.name, s_target, s_message, h_data);
                 break;
             case Notifier.OUTPUT.STDOUT:
-                require('./outputs/stdout.js')(this.name, s_target, s_message, h_data);
+                require('./output/stdout.js')(this.name, s_target, s_message, h_data);
                 break;
             case Notifier.OUTPUT.STDERR:
-                require('./outputs/stderr.js')(this.name, s_target, s_message, h_data);
+                require('./output/stderr.js')(this.name, s_target, s_message, h_data);
                 break;
             case Notifier.OUTPUT.EVENT:
                 this.emit(s_target, s_message, h_data);
@@ -63,12 +63,6 @@ Notifier.prototype.add_filter = function(s_target, f_filter) {
     }
     this.filters[s_target].push(f_filter);
 };
-Notifier.prototype.add_listener = function(s_target, f_listener) {
-    if(typeof this.targets[s_target] === 'undefined'){
-        throw new Error('Invalid target : ', s_target);
-    }
-    this.addListener(s_target, f_listener);
-};
 
 
 var h_notifiers = {};
@@ -78,7 +72,13 @@ module.exports = function(s_name, f_init_conf){
         var oc_notifier = new Notifier(s_name, h_conf);
         for(var s_target in h_conf){
             if(h_conf.hasOwnProperty(s_target)){
-                oc_notifier.__proto__[s_target] = oc_notifier.notify.bind(oc_notifier, s_target);
+                if(!oc_notifier.hasOwnProperty(s_target)) {
+                    if(typeof oc_notifier[s_target] === 'undefined') {
+                        oc_notifier[s_target] = oc_notifier.notify.bind(oc_notifier, s_target);
+                    } else {
+                        throw new Error('Invalid target '+s_target );
+                    }
+                }
             }
         }
         h_notifiers[s_name] = oc_notifier;
