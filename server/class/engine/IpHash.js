@@ -1,6 +1,6 @@
 'use strict';
 
-var ef_merge = require('merge');
+var rf_merge = require('merge');
 
 function IpHashEngine(f_spawn, h_conf) {
     var self = this,
@@ -10,7 +10,7 @@ function IpHashEngine(f_spawn, h_conf) {
         };
 
     self.spawn = f_spawn;
-    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
+    self.conf = (typeof h_conf !== 'undefined')? rf_merge(h_default_conf, h_conf) : h_default_conf;
 
     self.worker_pool = [];
 }
@@ -32,7 +32,6 @@ IpHashEngine.prototype._spawn = function(i_index){
 };
 IpHashEngine.prototype.init = function(){
     for(var i = 0; i < this.conf.max; i++){
-        console.log('raise ', i);
         this._spawn(i);
     }
 };

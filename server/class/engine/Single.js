@@ -1,6 +1,6 @@
 'use strict';
 
-var ef_merge = require('merge');
+var rf_merge = require('merge');
 
 function SingleEngine(f_spawn, h_conf) {
     var self = this,
@@ -10,7 +10,7 @@ function SingleEngine(f_spawn, h_conf) {
         };
 
     self.spawn = f_spawn;
-    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
+    self.conf = (typeof h_conf !== 'undefined')? rf_merge(h_default_conf, h_conf) : h_default_conf;
 
     self.worker = false;
 }

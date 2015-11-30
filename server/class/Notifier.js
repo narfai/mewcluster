@@ -1,6 +1,6 @@
 'use strict';
 
-const util = require('util');
+const ro_util = require('util');
 const EventEmitter = require('events');
 
 function Notifier(s_name, h_targets){
@@ -9,7 +9,7 @@ function Notifier(s_name, h_targets){
     this.targets = h_targets;
     this.filters = {};
 }
-util.inherits(Notifier, EventEmitter);
+ro_util.inherits(Notifier, EventEmitter);
 
 Notifier.__proto__.OUTPUT = {
     FILE : 1,

@@ -1,10 +1,10 @@
 'use strict';
 
 //Have to handle clustering (both Master and Worker)
-var m_cluster = require('cluster');
+var ro_cluster = require('cluster');
 
 //Have to handle balancing (both Master and Worker)
-var m_balancer = require('./class/Balancer');
+var ro_balancer = require('./class/Balancer');
 
 //Have to handle notification and logging (both Master and Worker)
 var oc_notifier = require('./class/Notifier')('app', function(OUTPUTS){
@@ -15,7 +15,7 @@ var oc_notifier = require('./class/Notifier')('app', function(OUTPUTS){
     };
 });
 
-if(m_cluster.isMaster) {
+if(ro_cluster.isMaster) {
 //This code should be executed only once on a Master process
 
     //Check Docker ENV
@@ -28,13 +28,13 @@ if(m_cluster.isMaster) {
     }
 
     //Proxy listen for TCP requests
-    m_balancer.listen({
+    ro_balancer.listen({
         port:8080,
-        engine:m_balancer.ENGINE.IPHASH,
+        engine:ro_balancer.ENGINE.IPHASH,
         timeout:5000,
         engine_conf:{
             max:2,
-            respawn:false
+            respawn:true
         }
     });
 
@@ -42,22 +42,22 @@ if(m_cluster.isMaster) {
 //This code should be executed from one to many times on a Worker process
 
     //Have to handle HTTP
-    var m_http = require('http');
+    var ro_http = require('http');
 
     //Have to handle absctract sockets
-    var m_socket_io = require('socket.io');
+    var rf_socket_io = require('socket.io');
 
     //Needed to get per-user session through redis
-    var m_socket_io_redis = require('socket.io-redis');
+    var rf_socket_io_redis = require('socket.io-redis');
 
     //Have to parse some urls
-    var m_url = require('url');
+    var ro_url = require('url');
 
     //Our application
     var App = require('../app/app');
 
     //Get App Emitter
-    var o_app_emitter = m_balancer.get_app_emitter();
+    var o_app_emitter = ro_balancer.get_app_emitter();
 
     //Triggered instead killing process
     process.on('uncaughtException', function (o_error) {
@@ -65,10 +65,9 @@ if(m_cluster.isMaster) {
         o_app_emitter.send_panic(o_error);
     });
 
-
     //Create HTTP server
-    var o_internal_server = m_http.createServer(function (o_req, o_res) {
-        var s_path = m_url.parse(o_req.url).pathname;
+    var o_internal_server = ro_http.createServer(function (o_req, o_res) {
+        var s_path = ro_url.parse(o_req.url).pathname;
         oc_notifier.debug('Handle http internal request : %s (PID #%s)', s_path, process.pid);
 
         o_app_emitter.send_heartbeat();
@@ -94,37 +93,17 @@ if(m_cluster.isMaster) {
     }).listen(0, 'localhost');
 
     //Bind abstract socket to http server
-    var o_io = m_socket_io(o_internal_server);
+    var o_io = rf_socket_io(o_internal_server);
 
     //Bind redis socket per-user session
-    o_io.adapter(m_socket_io_redis({
+    o_io.adapter(rf_socket_io_redis({
         host: process.env.REDIS_PORT_6379_TCP_ADDR,
         port: process.env.REDIS_PORT_6379_TCP_PORT
     }));
 
     //Instanciate our application. Have to be before "bind_internal" allow app listeners to be triggered before server one's in event queue
-    var o_app = new App(o_app_emitter, oc_notifier);
+    new App(o_app_emitter, oc_notifier);
 
     //Allow balancer to relay TCP connexions to our internal server
-    m_balancer.bind_internal(o_internal_server, o_app_emitter);
+    ro_balancer.bind_internal(o_internal_server, o_app_emitter);
 }
-//process.stdout.write("\x1b[1;1H\x1b[2J");
-//process.stdin.setEncoding('utf8');
-//
-//process.stdin.on('readable', function() {
-//    var chunk = process.stdin.read();
-//    if (chunk !== null) {
-//        process.stdout.write('data: ' + chunk);
-//    }
-//});
-//
-//process.stdin.on('end', function() {
-//    process.stdout.write('end');
-//});
-/*
-Créer une interface CLI qui permet :
-de voir les workers
-de voir les logs par onglets
-de tuer / relancer un worker
-
-*/

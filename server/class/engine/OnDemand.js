@@ -1,7 +1,7 @@
 'use strict';
 
-const m_cluster = require('cluster');
-const ef_merge = require('merge');
+const ro_cluster = require('cluster');
+const rf_merge = require('merge');
 
 function OnDemandEngine(f_spawn, h_conf) {
     var self = this,
@@ -11,7 +11,7 @@ function OnDemandEngine(f_spawn, h_conf) {
         };
 
     self.spawn = f_spawn;
-    self.conf = (typeof h_conf !== 'undefined')? ef_merge(h_default_conf, h_conf) : h_default_conf;
+    self.conf = (typeof h_conf !== 'undefined')? rf_merge(h_default_conf, h_conf) : h_default_conf;
 
     self.worker_by_ip = {};
     self.count = 0;
@@ -45,7 +45,7 @@ OnDemandEngine.prototype.get_worker = function(s_ip){
             throw new Error('Too much workers');
         }
     } else {
-        return m_cluster.workers[self.worker_by_ip];
+        return ro_cluster.workers[self.worker_by_ip];
     }
 };
 

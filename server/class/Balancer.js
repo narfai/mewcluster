@@ -1,16 +1,16 @@
 'use strict';
 
 //Need to handle clustering
-var m_cluster = require('cluster');
+const ro_cluster = require('cluster');
 
 //Need to create tcp server
-var m_net = require('net');
-
-//Need to create event emitter
-var EventEmitter = require('events');
+const ro_net = require('net');
 
 //Need to merge some hash
-var rf_merge = require('merge');
+const rf_merge = require('merge');
+
+//Need to create event emitter
+const EventEmitter = require('events');
 
 //Create and configure balancer notifier
 var oc_notifier = require('./Notifier')('balancer', function(OUTPUTS){
@@ -58,7 +58,7 @@ Balancer.__proto__.ENGINE = {
     IPHASH : 4
 };
 Balancer.prototype.set_worker_timeout = function(o_worker){
-    if(m_cluster.isMaster) {
+    if(ro_cluster.isMaster) {
         var self = this;
         if (self.timeout !== 0) {
             if (typeof self.timeouts[o_worker.id] !== 'undefined') {
@@ -78,11 +78,11 @@ Balancer.prototype.set_worker_timeout = function(o_worker){
  * @return Worker
  */
 Balancer.prototype.spawn = function(){
-    if(m_cluster.isMaster) {
+    if(ro_cluster.isMaster) {
         var self = this;
 
         //Fork current process (Execution entry of new thread should be server.js)
-        var o_worker = m_cluster.fork();
+        var o_worker = ro_cluster.fork();
 
         o_worker.on('online', function(){
             self.set_worker_timeout(o_worker);
@@ -116,7 +116,7 @@ Balancer.prototype.spawn = function(){
  * @param h_engine_conf ({max:0, auto})
  */
 Balancer.prototype.load_engine = function(i_engine, h_engine_conf){
-    if(m_cluster.isMaster) {
+    if(ro_cluster.isMaster) {
         var Engine;
         switch (i_engine) {
             case Balancer.ENGINE.ONDEMAND :
@@ -151,7 +151,7 @@ Balancer.prototype.load_engine = function(i_engine, h_engine_conf){
  * @param {Hash}h_conf
  */
 Balancer.prototype.listen = function(h_conf){
-    if(m_cluster.isMaster) {
+    if(ro_cluster.isMaster) {
         var self = this;
 
     //Initialization
@@ -168,7 +168,7 @@ Balancer.prototype.listen = function(h_conf){
     //Create front TCP proxy server
 
         //pauseOnConnect option avoid data loss while relaying TCP connection
-        var o_front_server = m_net.createServer({pauseOnConnect: true}, function (o_conn) {
+        var o_front_server = ro_net.createServer({pauseOnConnect: true}, function (o_conn) {
             try {
                 //Get worker from balance engine
                 var o_worker = self.engine.get_worker(o_conn.remoteAddress);
@@ -191,7 +191,7 @@ Balancer.prototype.listen = function(h_conf){
             oc_notifier.master_debug('Error :' + o_error.toString(), {'err': o_error});
         });
 
-        m_cluster.on('listening', function(o_worker, o_conn) {
+        ro_cluster.on('listening', function(o_worker, o_conn) {
             oc_notifier.worker_debug('#'+o_worker.id+'(PID #'+o_worker.process.pid+') listen to ' + o_conn.address + ':' + o_conn.port, {conn:o_conn});
         });
 
@@ -206,10 +206,10 @@ Balancer.prototype.listen = function(h_conf){
  * @params {Server}o_internal_server, {Object}o_app_emitter
  */
 Balancer.prototype.bind_internal = function(o_internal_server, o_app_emitter){
-    if(m_cluster.isWorker) {
+    if(ro_cluster.isWorker) {
 
         //Check given object validity
-        if (!(o_internal_server instanceof m_net.Server )) {
+        if (!(o_internal_server instanceof ro_net.Server )) {
             throw new Error('Invalid server');
         }
 
@@ -220,7 +220,7 @@ Balancer.prototype.bind_internal = function(o_internal_server, o_app_emitter){
 
         o_app_emitter.on_clear(function(){
             o_internal_server.close(function(){
-                oc_notifier.worker_debug('Proper close internal server on worker # :' + m_cluster.worker.id + ' (PID #' + process.pid + ')');
+                oc_notifier.worker_debug('Proper close internal server on worker # :' + ro_cluster.worker.id + ' (PID #' + process.pid + ')');
             });
         });
 
@@ -231,7 +231,7 @@ Balancer.prototype.bind_internal = function(o_internal_server, o_app_emitter){
             }
 
             //Relay connexion to internal http server
-            oc_notifier.master_debug('Relay connection from ' + o_conn.remoteAddress + ' on worker #' + m_cluster.worker.id + '(PID #' + process.pid + ')');
+            oc_notifier.master_debug('Relay connection from ' + o_conn.remoteAddress + ' on worker #' + ro_cluster.worker.id + '(PID #' + process.pid + ')');
             o_internal_server.emit('connection', o_conn);
 
             //Resume paused connection
@@ -244,17 +244,17 @@ Balancer.prototype.bind_internal = function(o_internal_server, o_app_emitter){
  * @returns {EventEmitter}
  */
 Balancer.prototype.get_app_emitter = function(){
-    if(m_cluster.isWorker) {
+    if(ro_cluster.isWorker) {
         var self = this;
 
         var o_emitter = new EventEmitter();
 
         //Relay Worker to Master messages
         o_emitter.addListener('heartbeat', function(){
-            self.heartbeat(m_cluster.worker);
+            self.heartbeat(ro_cluster.worker);
         });
         o_emitter.addListener('panic', function(){
-            self.panic(m_cluster.worker);
+            self.panic(ro_cluster.worker);
         });
 
         //Internal event
@@ -262,7 +262,7 @@ Balancer.prototype.get_app_emitter = function(){
 
             //Exit at the end of event queue
             o_emitter.addListener('clear', function(){
-                self.exit(m_cluster.worker);
+                self.exit(ro_cluster.worker);
             });
 
             //Call all clear listener and exit
@@ -270,7 +270,7 @@ Balancer.prototype.get_app_emitter = function(){
         });
 
         //Relay Master to Worker messages
-        m_cluster.worker.on('message', function(s_message){
+        ro_cluster.worker.on('message', function(s_message){
             if(s_message !== 'exit') return;
             o_emitter.emit('exit');
         });
@@ -297,7 +297,7 @@ Balancer.prototype.get_app_emitter = function(){
  * @param {Worker}o_worker
  */
 Balancer.prototype.heartbeat = function(o_worker){
-    if(m_cluster.isWorker){
+    if(ro_cluster.isWorker){
         oc_notifier.worker_debug('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send heartbeat to master');
         o_worker.send('heartbeat');
     } else {
@@ -310,7 +310,7 @@ Balancer.prototype.heartbeat = function(o_worker){
  * @params {Worker}o_worker, {Error}o_error
  */
 Balancer.prototype.panic = function(o_worker, o_error){
-    if(m_cluster.isWorker){
+    if(ro_cluster.isWorker){
         oc_notifier.worker_error('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send panic due to fatal error : ' + o_error.toString(), {error:o_error});
         if(o_worker.isConnected) {
 
@@ -328,11 +328,11 @@ Balancer.prototype.panic = function(o_worker, o_error){
 /**
  * Exit close properly your app or worker
  * /!\ Calling exit function means you have to clear all resources on clear event
- * /!\ An "exited" worker will never re-spawn automatically
+ * /!\ An "exited" worker will never re-spawn automatically but another worker may spawn on demand after this one was exited
  * @param {Worker}o_worker
  */
 Balancer.prototype.exit = function(o_worker){
-    if(m_cluster.isWorker){
+    if(ro_cluster.isWorker){
         oc_notifier.worker_debug('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send exit');
         if(o_worker.isConnected) {
             o_worker.disconnect();
