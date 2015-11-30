@@ -32,10 +32,10 @@ SingleEngine.prototype.init = function(){
     this.worker = this._spawn();
 };
 SingleEngine.prototype.get_worker = function(s_ip){
-    if(!this.worker || this.worker.isDead){
+    if(!this.worker || this.worker.isDead()){
         this.worker = this._spawn();
     }
-    if(!this.worker.isConnected){
+    if(!this.worker.isConnected()){
         throw new Error('Worker #'+this.worker.id+' is disconnected !');
     }
     return this.worker;

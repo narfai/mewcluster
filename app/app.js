@@ -30,10 +30,10 @@ var m_merge = require('merge');
 var m_redis = require('redis');
 
 function TestingApp(o_server_events, oc_notifier){
-    setInterval(function(){
-        oc_notifier.debug('App heartbeat');
-        o_server_events.send_heartbeat();
-    }, 1500);
+    //setInterval(function(){
+    //    oc_notifier.debug('App heartbeat');
+    //    o_server_events.send_heartbeat();
+    //}, 1500);
 }
 TestingApp.__proto__.get_static = function(s_path, h_context){//TODO create a real static router
     var o_defer = m_q.defer();
@@ -69,14 +69,5 @@ TestingApp.__proto__.get_static = function(s_path, h_context){//TODO create a re
 
     return o_defer.promise;
 };
-//console.log(process.env);
-//var s_redis_ip = process.env.REDIS_PORT_6379_TCP_ADDR;
-//var i_redis_port = process.env.REDIS_PORT_6379_TCP_PORT;
-//
-//var o_redis_client = m_redis.createClient(i_redis_port, s_redis_ip);
-//
-//o_redis_client.on('error', function(s_err){
-//    console.log('Redis['+s_redis_ip+':'+i_redis_port+'] error : ' + s_err);
-//});
 
 module.exports = TestingApp;

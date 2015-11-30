@@ -44,10 +44,10 @@ RoundRobinEngine.prototype.get_worker = function(s_ip){
     var index = this.current;
     this.current++;
     var worker = this.worker_pool[index];
-    if(worker.isDead){
+    if(worker.isDead()){
         return this._spawn(index);
     } else {
-        if(!worker.isConnected){
+        if(!worker.isConnected()){
             throw new Error('Worker #'+worker.id+' is disconnected !');
         }
         return worker;

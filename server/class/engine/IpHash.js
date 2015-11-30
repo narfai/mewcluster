@@ -32,6 +32,7 @@ IpHashEngine.prototype._spawn = function(i_index){
 };
 IpHashEngine.prototype.init = function(){
     for(var i = 0; i < this.conf.max; i++){
+        console.log('raise ', i);
         this._spawn(i);
     }
 };
@@ -53,11 +54,12 @@ IpHashEngine.prototype.get_worker = function(s_ip){
     }
     s = remove_ipv6(s);
     var i_index = Number(s) % this.conf.max;
+    console.log('give worker ',i_index, this.worker_pool[i_index].isDead());
 
-    if(typeof this.worker_pool[i_index] === 'undefined' || this.worker_pool[i_index].isDead){
+    if(typeof this.worker_pool[i_index] === 'undefined' || this.worker_pool[i_index].isDead()){
         return this._spawn(i_index);
     }
-    if(!this.worker_pool[i_index].isConnected){
+    if(!this.worker_pool[i_index].isConnected()){
         throw new Error('Worker #'+this.worker_pool[i_index].id+' is disconnected');
     }
     return this.worker_pool[i_index];

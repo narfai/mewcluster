@@ -31,7 +31,7 @@ if(m_cluster.isMaster) {
     m_balancer.listen({
         port:8080,
         engine:m_balancer.ENGINE.IPHASH,
-        timeout:2000,
+        timeout:5000,
         engine_conf:{
             max:2,
             respawn:false
