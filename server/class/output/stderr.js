@@ -1,3 +1,5 @@
+'use strict';
+
 var ro_util = require('util');
 var ro_os = require('os');
 

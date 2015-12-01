@@ -1,0 +1,14 @@
+{
+  "balancer":{
+    "port":"8080",
+    "timeout":0,
+    "engine":4,
+    "engine_conf":{
+      "max":4,
+      "respawn":true
+    }
+  },
+  "httpcontent":{
+    "render_path":"/content"
+  }
+}

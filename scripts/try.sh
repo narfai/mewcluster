@@ -14,5 +14,5 @@ docker run -t -i --rm \
     -p 8080:8080 \
     -v /home/narfai/tuxdata/docker/nodecluster/app:/app \
     -v /home/narfai/tuxdata/docker/nodecluster/server:/server \
-    azsystem/nodecluster:0.0.1 \
+    azsystem/nodecluster:0.1.0 \
     /bin/bash

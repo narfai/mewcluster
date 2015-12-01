@@ -1,9 +1,9 @@
 'use strict';
 
-var m_fs = require('fs');
-var m_jade = require('jade');
-var m_q = require('q');
-var m_path = require('path');
+var ro_fs = require('fs');
+var ro_jade = require('jade');
+var ro_q = require('q');
+var ro_path = require('path');
 
 function HttpContent(s_name, h_context, s_type){
     var self = this;
@@ -39,18 +39,18 @@ HttpContent.prototype.get_type = function(){
     return this.type;
 };
 
-HttpContent.prototype.render = function(){ //TODO make multi purpose renderer module
+HttpContent.prototype.render = function(s_content_dir){ //TODO make multi purpose renderer module
     var self = this;
-    var s_content_path = m_path.resolve(__dirname, '../content/' + self.name);
-    var o_defer = m_q.defer();
-    m_fs.stat(s_content_path, function(err, stats){
+    var s_content_path = ro_path.resolve(__dirname + '/../../../' + s_content_dir + '/' + self.name);
+    var o_defer = ro_q.defer();
+    ro_fs.stat(s_content_path, function(err, stats){
         if(err){
             o_defer.reject(err);
         } else if(!stats.isFile()){
             o_defer.reject('Specified path is not a file');
         } else {
             if (self.engine === HttpContent.ENGINE.FS) {
-                m_fs.readFile(s_content_path, self.encoding, function (err, data) {
+                ro_fs.readFile(s_content_path, self.encoding, function (err, data) {
                     if (err) {
                         o_defer.reject(err);
                     } else {
@@ -58,7 +58,7 @@ HttpContent.prototype.render = function(){ //TODO make multi purpose renderer mo
                     }
                 });
             } else if (self.engine === HttpContent.ENGINE.JADE) {
-                var f_compiled_content = m_jade.compileFile(s_content_path, {
+                var f_compiled_content = ro_jade.compileFile(s_content_path, {
                     cache:true
                 });
                 o_defer.resolve(f_compiled_content(self.context));
