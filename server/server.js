@@ -110,7 +110,8 @@ if(ro_cluster.isMaster) {
     //Instanciate our application. Have to be before "bind_internal" allow app listeners to be triggered before server one's in event queue
     new App({
         emitter :o_app_emitter,
-        notifier_factory: rf_get_notifier
+        notifier_factory: rf_get_notifier,
+        io:o_io
     });
 
     //Allow balancer to relay TCP connexions to our internal server
