@@ -1,0 +1,96 @@
+DOC REDMINE
+
+
+== Javascript ==
+	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+== Nodejs ==
+	https://nodejs.org/docs/latest/api/util.html
+	http://bites.goodeggs.com/posts/export-this/
+	https://nodejs.org/api/cluster.html#cluster_how_it_works
+
+== Interface CLI ==
+    https://github.com/chjj/blessed
+
+== Clustering ==
+	https://github.com/elad/node-cluster-socket.io/blob/master/README.md
+
+== Jade ==
+	https://www.npmjs.com/package/jade
+
+== Socket.io ==
+	https://openclassrooms.com/courses/des-applications-ultra-rapides-avec-node-js/socket-io-passez-au-temps-reel
+
+
+
+
+=========================================================================
+== TODO General ==
+- Faire un planning
+- grunt
+- socket.io
+- l'environnement de débug
+- environnement de documentation en ligne
+- doc exemples de pattern en nodejs
+- doc déploiement de l'environnement de dev
+- doc avant de push sur la testing (documentation, codelint)
+
+
+
+== TODO Balancer ==
+- Faire l'algo de hash ip comme moteur OK
+- Faire un système de log server OK
+
+- Refacto avec la convention de nommage
+- Commenter le code
+- Faire l'engine Conservative (par palliers)
+- Faire les fonctions de contrôles (spawn/kill/restart)
+- Faire l'interface cli de monitoring et de contrôle
+- Faire une classe d'interface à respecter
+- Faire du code exemple
+- Benchmarker les différents engine
+- Ecrire des tests
+- Gérer le "suicide" des workers et les codes de retour (on peut en faire des custom ça peut être sympa)
+- Système de conf adaptable et lazy loadée ? en parler a alexandre ou au moins notifier redmine.
+
+PUR SCRIPT
+
+#!/bin/bash
+
+# Author: Erik Kristensen
+# Email: erik@erikkristensen.com
+# License: MIT
+# Nagios Usage: check_nrpe!check_docker_container!_container_id_
+# Usage: ./check_docker_container.sh _container_id_
+#
+# The script checks if a container is running.
+#   OK - running
+#   WARNING - container is ghosted
+#   CRITICAL - container is stopped
+#   UNKNOWN - does not exist
+
+CONTAINER=$1
+
+RUNNING=$(docker inspect --format="{{ .State.Running }}" $CONTAINER 2> /dev/null)
+
+if [ $? -eq 1 ]; then
+  echo "UNKNOWN - $CONTAINER does not exist."
+  exit 3
+fi
+
+if [ "$RUNNING" == "false" ]; then
+  echo "CRITICAL - $CONTAINER is not running."
+  exit 2
+fi
+
+GHOST=$(docker inspect --format="{{ .State.Ghost }}" $CONTAINER)
+
+if [ "$GHOST" == "true" ]; then
+  echo "WARNING - $CONTAINER has been ghosted."
+  exit 1
+fi
+
+STARTED=$(docker inspect --format="{{ .State.StartedAt }}" $CONTAINER)
+NETWORK=$(docker inspect --format="{{ .NetworkSettings.IPAddress }}" $CONTAINER)
+
+echo "OK - $CONTAINER is running. IP: $NETWORK, StartedAt: $STARTED"

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR=$(dirname $(realpath $0))
+
 # -t -i --rm : Tag / Interactive / Oneshot
 # --name     : Name container
 # --link     : Link redis
@@ -12,7 +14,7 @@ docker run -t -i --rm \
    --name cluster_test \
    --link redis_test:redis \
     -p 8080:8080 \
-    -v /home/narfai/tuxdata/docker/nodecluster/app:/app \
-    -v /home/narfai/tuxdata/docker/nodecluster/server:/server \
+    -v "${SCRIPT_DIR}/app:/app" \
+    -v "${SCRIPT_DIR}/server:/server" \
     azsystem/nodecluster:0.1.0 \
     /bin/bash
