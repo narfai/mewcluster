@@ -30,7 +30,7 @@ function TestingApp(h_server){
       MyTestingAppNotifier.info('a user connected');
       socket.on('message', function(msg){
         console.log('message: ' + msg);
-        io.emit('message', 'coin');
+        h_server.io.emit('message', 'coin');
       });
       socket.on('disconnect', function(){
           MyTestingAppNotifier.info('a user disconnected');

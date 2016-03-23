@@ -27,7 +27,7 @@ if(ro_cluster.isMaster) {
     //TODO implement optionnal docker env for overriding application config
     var h_default_config = {
         port:8080,
-        engine:ro_balancer.ENGINE.IPHASH,
+        engine:ro_balancer.ENGINE.SINGLE,
         timeout:5000,
         engine_conf:{
             max:2,
@@ -71,6 +71,8 @@ if(ro_cluster.isMaster) {
         o_app_emitter.send_panic(o_error);
     });
 
+    //TODO Grab SIGTERM for calling on_close on loaded Apps THEN exiting
+
 
     //Create HTTP server
     var o_internal_server = ro_http.createServer(function (o_req, o_res) {
@@ -85,7 +87,7 @@ if(ro_cluster.isMaster) {
                 return [o_content.render(APP_PATH + rh_config_from_app.httpcontent.render_path), o_content.get_code(), o_content.get_type()];
             })
             .spread(function (s_content, i_code, s_type) { //Send HttpContent to client
-                o_res.writeHead(i_code, {
+                o_res.writeHead(i_code, {//TODO Allow headers to be dynamic by adding headers hash to HttpContent.headers
                     'Content-Type': s_type,
                     'Content-Length': s_content.length
                 });

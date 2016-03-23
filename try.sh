@@ -12,9 +12,9 @@ SCRIPT_DIR=$(dirname $(realpath $0))
 # Exec bash
 docker run -t -i --rm \
    --name cluster_test \
-   --link redis_test:redis \
+   --link nodecluster-redis:redis \
     -p 8080:8080 \
-    -v "${SCRIPT_DIR}/app:/app" \
-    -v "${SCRIPT_DIR}/server:/server" \
-    azsystem/nodecluster:0.1.0 \
-    /bin/bash
+    nodecluster:0.1
+#    /bin/bash
+#    -v "${SCRIPT_DIR}/server:/server" \
+#   -v "${SCRIPT_DIR}/app:/app" \

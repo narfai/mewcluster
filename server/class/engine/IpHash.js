@@ -34,7 +34,7 @@ IpHashEngine.prototype._spawn = function(i_index){
         o_worker = this.spawn();
 
     o_worker.on('exit', function(o_worker){
-        if(typeof o_worker.suicide !== 'undefined' && o_worker.suicide && (self.conf.respawn === true)) {
+        if(o_worker && o_worker.suicide && (self.conf.respawn === true)) {
             self._spawn(i_index);
         } else {
             self.worker_pool.slice(i_index, 1);

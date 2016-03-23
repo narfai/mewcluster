@@ -52,7 +52,7 @@ Notifier.prototype.notify = function(s_target, s_message, h_data){
         s_message = a_tuple[0];
         h_data = a_tuple[1];
     }
-    for(var i = 0; i < this.targets[s_target].length; i++){
+    for(var i = 0; i < this.targets[s_target].length; i++){//TODO implement dynamic loading based on files
         switch (this.targets[s_target][i]){
             case Notifier.OUTPUT.FILE:
                 require('./output/file.js')(this.name, s_target, s_message, h_data);

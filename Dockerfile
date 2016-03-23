@@ -25,21 +25,23 @@ RUN pacman -Sy --force curl openssl --noconfirm --noprogressbar && \
 	pacman -Syu --noconfirm --noprogressbar
 
 # Install packages (redis install redis-cli tool for maintenance)
-RUN pacman -S nodejs redis npm python2 --noconfirm --noprogress
+RUN pacman -S make binutils gcc nodejs redis npm python2 --noconfirm --noprogress
 RUN npm config --global set python /usr/bin/python2
 
 # Add and prepare cluster server data
 RUN mkdir -p /server/{pids,logs}
 ADD server /server
 RUN chown -R nodecluster:nodecluster /server
-ONBUILD WORKDIR /server
-ONBUILD RUN npm update
+WORKDIR /server
+RUN npm update
+RUN npm rebuild
 
 # Add and prepare app dir
 ADD app /app
 RUN chown -R nodecluster:nodecluster /app
-ONBUILD WORKDIR /app
-ONBUILD RUN npm update
+WORKDIR /app
+RUN npm update
+RUN npm rebuild
 
 # Volume configuration
 VOLUME /app
