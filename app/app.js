@@ -19,6 +19,23 @@ var ro_q = require('q');
 var rf_merge = require('merge');
 
 function TestingApp(h_server){
+  var MyTestingAppNotifier = h_server.notifier_factory('app', function(OUTPUTS){
+     return {
+         info:[OUTPUTS.STDOUT],
+    /*     error:[OUTPUTS.FILE, OUTPUTS.STDERR],
+         debug:[OUTPUTS.FILE, OUTPUTS.STDERR]*/
+     };
+  });
+    h_server.io.on('connection', function(socket){
+      MyTestingAppNotifier.info('a user connected');
+      socket.on('message', function(msg){
+        console.log('message: ' + msg);
+        io.emit('message', 'coin');
+      });
+      socket.on('disconnect', function(){
+          MyTestingAppNotifier.info('a user disconnected');
+      });
+    });
     /*
      h_server.emitter {
         on_clear:function(f_callback)
@@ -26,13 +43,7 @@ function TestingApp(h_server){
         send_heartbeat:function,
         send_exit:function,
      }
-     var MyTestingAppNotifier = h_server.notifier_factory('app', function(OUTPUTS){
-        return {
-            info:[OUTPUTS.STDOUT],
-            error:[OUTPUTS.FILE, OUTPUTS.STDERR],
-            debug:[OUTPUTS.FILE, OUTPUTS.STDERR]
-        };
-     });
+
      MyTestingAppNotifier.info = function(s_message, h_data)
      MyTestingAppNotifier.error = function(s_message, h_data)
      MyTestingAppNotifier.debug = function(s_message, h_data)

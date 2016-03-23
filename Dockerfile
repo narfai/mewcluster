@@ -12,14 +12,20 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-FROM azsystem/archlinux:latest
+FROM base/archlinux
 MAINTAINER Francois Cadeillan <francois@azsystem.fr>
 
 # Add cluster user
 RUN groupadd -r nodecluster && useradd -r -g nodecluster nodecluster
 
+RUN pacman -Sy --force curl openssl --noconfirm --noprogressbar && \
+	pacman -S pacman --noconfirm --noprogressbar && \
+	pacman-db-upgrade && \
+	pacman-key --refresh-keys &&\
+	pacman -Syu --noconfirm --noprogressbar
+
 # Install packages (redis install redis-cli tool for maintenance)
-RUN pacman -Sy nodejs redis npm python2 --noconfirm --noprogress
+RUN pacman -S nodejs redis npm python2 --noconfirm --noprogress
 RUN npm config --global set python /usr/bin/python2
 
 # Add and prepare cluster server data
@@ -39,6 +45,14 @@ ONBUILD RUN npm update
 VOLUME /app
 VOLUME /server
 
+RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+    && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-amd64" \
+    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-amd64.asc" \
+    && gpg --verify /usr/local/bin/gosu.asc \
+    && rm /usr/local/bin/gosu.asc \
+    && rm -r /root/.gnupg/ \
+    && chmod +x /usr/local/bin/gosu
+
 # Prepare entrypoint
 ADD entrypoint.sh /entrypoint.sh
 RUN chown nodecluster:nodecluster /entrypoint.sh
@@ -49,7 +63,7 @@ ENTRYPOINT  ["/entrypoint.sh"]
 WORKDIR /server
 
 # Setting current user
-# USER nodecluster
+#USER nodecluster
 
 # Will listen on port 80 for http
 EXPOSE 8080
