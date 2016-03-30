@@ -16,6 +16,7 @@ limitations under the License.*/
 
 var ro_fs = require('fs');
 var ro_jade = require('jade');
+var ro_hogan = require('hogan.js');
 var ro_q = require('q');
 var ro_path = require('path');
 
@@ -34,7 +35,8 @@ function HttpContent(s_name, h_context, s_type){
 //Engine static definition
 HttpContent.__proto__.ENGINE = {
     FS:1,
-    JADE:2
+    JADE:2,
+    HOGAN:3
 };
 
 HttpContent.prototype.set_engine = function(i_engine){
@@ -76,6 +78,15 @@ HttpContent.prototype.render = function(s_content_dir){ //TODO make multi purpos
                     cache:true
                 });
                 o_defer.resolve(f_compiled_content(self.context));
+            } else if (self.engine === HttpContent.ENGINE.HOGAN) {
+                ro_fs.readFile(s_content_path, self.encoding, function (err, data) {
+                    if (err) {
+                        o_defer.reject(err);
+                    } else {
+                        var o_compiled_content = ro_hogan.compile(data);
+                        o_defer.resolve(o_compiled_content.render(self.context));
+                    }
+                });
             } else {
                 o_defer.reject('Invalid engine');
             }

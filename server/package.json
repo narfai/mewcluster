@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "main": "server.js",
   "dependencies": {
+    "hogan": "^1.0.2",
+    "jade": "^1.11.0",
     "merge": "^1.2.0",
+    "q": "^1.4.1",
     "redis": "^2.3.1",
     "socket.io": "=1.4.5",
-    "jade": "^1.11.0",
-    "q": "^1.4.1",
     "socket.io-redis": "=1.0.0"
   },
   "keywords": [],
