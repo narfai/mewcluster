@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(dirname $(realpath $0))
-
+#TODO allow to select an application path
 # -t -i --rm : Tag / Interactive / Oneshot
 # --name     : Name container
 # --link     : Link redis

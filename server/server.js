@@ -1,5 +1,7 @@
 'use strict';
 
+//TODO create simple server Object and pack it into a usable library
+//as (new Server).run(App);
 //Have to handle clustering (both Master and Worker)
 var ro_cluster = require('cluster');
 

@@ -17,6 +17,8 @@ limitations under the License.*/
 //TODO implement in order : requirejs loading, socket.io, grunt watchers & other conveniences, r.js
 var ro_q = require('q');
 var rf_merge = require('merge');
+var rf_leftpad = require('left-pad');
+
 
 function TestingApp(h_server){
   var MyTestingAppNotifier = h_server.notifier_factory('app', function(OUTPUTS){

@@ -109,13 +109,13 @@ Balancer.prototype.spawn = function(){
 
 
         //Happen after this specific worker has send a message
-        o_worker.on('message', function(s_message){
+        o_worker.on('message', function(s_message, o_error){
             switch(s_message){
                 case 'heartbeat':
                     self.heartbeat(o_worker);
                     break;
                 case 'panic':
-                    self.panic(o_worker);
+                    self.panic(o_worker, o_error);
                     break;
             }
         });
@@ -267,8 +267,8 @@ Balancer.prototype.get_app_emitter = function(){
         o_emitter.addListener('heartbeat', function(){
             self.heartbeat(ro_cluster.worker);
         });
-        o_emitter.addListener('panic', function(){
-            self.panic(ro_cluster.worker);
+        o_emitter.addListener('panic', function(o_error){
+            self.panic(ro_cluster.worker, o_error);
         });
 
         //Internal event
@@ -329,7 +329,7 @@ Balancer.prototype.panic = function(o_worker, o_error){
         if(o_worker.isConnected) {
 
             //Let master handle panic
-            o_worker.send('panic');
+            o_worker.send('panic', o_error);
         } else {
             process.exit(1);
         }

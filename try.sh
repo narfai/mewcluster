@@ -15,6 +15,6 @@ docker run -t -i --rm \
    --link nodecluster-redis:redis \
     -p 8080:8080 \
     nodecluster:0.1
+#chown -R nodecluster:nodecluster /server
 #    /bin/bash
 #    -v "${SCRIPT_DIR}/server:/server" \
-#   -v "${SCRIPT_DIR}/app:/app" \
