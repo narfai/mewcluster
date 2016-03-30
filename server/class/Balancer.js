@@ -329,7 +329,7 @@ Balancer.prototype.panic = function(o_worker, o_error){
         if(o_worker.isConnected) {
 
             //Let master handle panic
-            o_worker.send('panic', o_error);
+            o_worker.send('panic');
         } else {
             process.exit(1);
         }

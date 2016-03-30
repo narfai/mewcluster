@@ -38,6 +38,7 @@ function TestingApp(h_server){
           MyTestingAppNotifier.info('a user disconnected');
       });
     });
+	throw new Error('My big error');
     /*
      h_server.emitter {
         on_clear:function(f_callback)

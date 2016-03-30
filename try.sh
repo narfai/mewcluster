@@ -13,8 +13,9 @@ SCRIPT_DIR=$(dirname $(realpath $0))
 docker run -t -i --rm \
    --name cluster_test \
    --link nodecluster-redis:redis \
+   -v "${SCRIPT_DIR}/server:/server" \
+   -v "${SCRIPT_DIR}/app:/app" \
     -p 8080:8080 \
     nodecluster:0.1
 #chown -R nodecluster:nodecluster /server
 #    /bin/bash
-#    -v "${SCRIPT_DIR}/server:/server" \
