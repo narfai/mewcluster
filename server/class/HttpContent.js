@@ -66,7 +66,7 @@ HttpContent.prototype.render = function(s_content_dir){ //TODO make multi purpos
             o_defer.reject('Specified path is not a file');
         } else {
             if (self.engine === HttpContent.ENGINE.FS) {
-                ro_fs.readFile(s_content_path, self.encoding, function (err, data) {
+                ro_fs.readFile(s_content_path, function (err, data) {
                     if (err) {
                         o_defer.reject(err);
                     } else {
