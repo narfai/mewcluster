@@ -1,15 +1,18 @@
 {
-  "name": "nodecluster-testing",
+  "name": "Moofeenode",
   "version": "0.0.1",
   "main": "app.js",
   "dependencies": {
-    "redis": "^2.3.1",
-    "requirejs": "^2.1.21",
-    "grunt":"^0.4.5",
+    "amdefine": ">=0.1.0",
+    "grunt": "^0.4.5",
+    "hogan.js": "^3.0.2",
+    "merge": "^1.2.0",
+    "proto": "^1.0.19",
     "q": "^1.4.1",
-    "merge": "^1.2.0"
+    "redis": "^2.5.3",
+    "requirejs": "^2.2.0"
   },
   "keywords": [],
-  "author": "narfai",
+  "author": "Guss",
   "homepage": ""
 }

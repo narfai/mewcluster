@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-'use strict';
-
-var requirejs = require('requirejs');
-
-requirejs.config({
-	nodeRequire: require,
-	baseUrl: __dirname,
-	paths: {
-		proto: 'proto.umd.js'
-	}
-});
-
 if (typeof define !== 'function') {
 	var define = require('amdefine')(module);
 }
 
-define(['proto', './baseApp'], function (Proto, ehBassApp) {
-	var MoofeeApp = Proto(ehBassApp, function(superclass){
-		this.name = 'MoofeeApp';
-		this.init = function (h_server) {
-			superclass.call(this, h_server, function(socket){
-				//socket protocol extention here
+define(['proto', 'pages/APages', 'modules/helloWorld'], function(Proto, APages, ehHelloWorld) {
+	var Home = Proto(APages, function (superclass){
+		this.name = 'admin/Home';
+		this.init = function(o_client, o_server){
+			superclass.init.call(this, o_client, o_server);
+			o_hello = new ehHelloWorld(o_client, o_server);
+			this.o_client.emit('redraw', {
+				value:"<b id='hello'>"+o_hello.pageExec()+"<br />dynamicly load in page admin/Home</b><br /><a href='#' id='ask'>click here to ask</a>",
+				initScript: "fadminhome"
 			});
 		};
 	});
-	
-	return MoofeeApp;
+
+	return Home;
 });

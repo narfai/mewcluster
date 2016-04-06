@@ -14,31 +14,18 @@
  * limitations under the License.
  */
 
-'use strict';
-
-var requirejs = require('requirejs');
-
-requirejs.config({
-	nodeRequire: require,
-	baseUrl: __dirname,
-	paths: {
-		proto: 'proto.umd.js'
-	}
-});
-
 if (typeof define !== 'function') {
 	var define = require('amdefine')(module);
 }
 
-define(['proto', './baseApp'], function (Proto, ehBassApp) {
-	var MoofeeApp = Proto(ehBassApp, function(superclass){
-		this.name = 'MoofeeApp';
-		this.init = function (h_server) {
-			superclass.call(this, h_server, function(socket){
-				//socket protocol extention here
-			});
+define(['proto'], function(Proto) {
+	var AAppObject = Proto(function (){
+		this.name = 'AppObject';
+		this.init = function(o_client, o_server){
+			this.o_client = o_client;
+			this.o_server = o_server;
 		};
 	});
-	
-	return MoofeeApp;
+
+	return AAppObject;
 });

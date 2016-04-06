@@ -14,31 +14,34 @@
  * limitations under the License.
  */
 
-'use strict';
-
-var requirejs = require('requirejs');
-
-requirejs.config({
-	nodeRequire: require,
-	baseUrl: __dirname,
-	paths: {
-		proto: 'proto.umd.js'
-	}
-});
-
 if (typeof define !== 'function') {
 	var define = require('amdefine')(module);
 }
-
-define(['proto', './baseApp'], function (Proto, ehBassApp) {
-	var MoofeeApp = Proto(ehBassApp, function(superclass){
-		this.name = 'MoofeeApp';
-		this.init = function (h_server) {
-			superclass.call(this, h_server, function(socket){
-				//socket protocol extention here
-			});
-		};
-	});
-	
-	return MoofeeApp;
+define(function() {
+	return {
+		".html": {
+			"mime": "text/html",
+			"paths": ["/templates/{{templateName}}/"]
+		},
+		".css": {
+			"mime": "text/css",
+			"paths": ["/templates/{{templateName}}/css/"]
+		},
+		".js": {
+			"mime": "application/javascript",
+			"paths": ["/templates/{{templateName}}/scripts/", "/scripts/", "../node_modules/"]
+		},
+		".png": {
+			"mime": "image/png",
+			"paths": ["/templates/{{templateName}}/images/", "/images/"]
+		},
+		".gif": {
+			"mime": "image/gif",
+			"paths": ["/templates/{{templateName}}/images/", "/images/"]
+		},
+		".jpg": {
+			"mime": "image/jpeg",
+			"paths": ["/templates/{{templateName}}/images/", "/images/"]
+		}
+	};
 });

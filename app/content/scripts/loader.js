@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-'use strict';
-
-var requirejs = require('requirejs');
-
 requirejs.config({
 	nodeRequire: require,
-	baseUrl: __dirname,
 	paths: {
-		proto: 'proto.umd.js'
+		//proto: '/proto/dist/proto.umd.js',
+		io: 'socket.io/socket.io'
 	}
 });
 
-if (typeof define !== 'function') {
-	var define = require('amdefine')(module);
-}
-
-define(['proto', './baseApp'], function (Proto, ehBassApp) {
-	var MoofeeApp = Proto(ehBassApp, function(superclass){
-		this.name = 'MoofeeApp';
-		this.init = function (h_server) {
-			superclass.call(this, h_server, function(socket){
-				//socket protocol extention here
-			});
-		};
+requirejs(['webClient'], function (eh_WebClient) {
+	//adding some event to our app
+	eh_WebClient.addSocketEvent('message', function(data){
+		console.log(data);
 	});
-	
-	return MoofeeApp;
+	eh_WebClient.addSocketEvent('connected', function(){
+		eh_WebClient.emit('pages', {name:"home"});
+		document.getElementById('loadingScreen').classList.add('hide');
+		document.body.classList.remove('isLoading');
+	});
+	//start asking thing to server by saying him "hello"
+	eh_WebClient.emit('hello', true);
 });
+
