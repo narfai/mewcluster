@@ -55,6 +55,9 @@ if(ro_cluster.isMaster) {
     //Have to parse some urls
     const ro_url = require('url');
 
+    //promise!
+    const ro_q = require('q');
+    
     //Our application
     const App = require(APP_PATH+'/app');
 
@@ -78,28 +81,50 @@ if(ro_cluster.isMaster) {
 
     //Create HTTP server
     var o_internal_server = ro_http.createServer(function (o_req, o_res) {
+        var o_defer = ro_q.defer();
         var s_path = ro_url.parse(o_req.url).pathname;
-
         o_app_emitter.send_heartbeat();
-
-        //Static http request handling by application
-        //App have to send it bootload html + js code before having two-way communications
-        App.get_static(s_path, {pid: process.pid}, HttpContent) //Have to return a promise
-            .then(function (o_content) { //Split HttpContent object
-                return [o_content.render(APP_PATH + rh_config_from_app.httpcontent.render_path), o_content.get_code(), o_content.get_type()];
-            })
-            .spread(function (s_content, i_code, s_type) { //Send HttpContent to client
-                o_res.writeHead(i_code, {//TODO Allow headers to be dynamic by adding headers hash to HttpContent.headers
-                    'Content-Type': s_type,
-                    'Content-Length': s_content.length
+        var data = {
+            method: '',
+            value: ''
+        };
+        switch (o_req.method){
+            case 'POST':
+                data.method = 'POST';
+                o_req.on('data', function (d) {
+                    data.value += d;
                 });
-                o_res.write(s_content);
-                o_res.end();
-            }).catch(function(o_error) { //On any error or reject, send 500 error
+                o_req.on('end', function () {
+                    o_defer.resolve(data);
+                });
+                break;
+            case 'GET':
+            default:
+                data.method = 'GET';
+                o_defer.resolve(data);
+                break;
+        }
+        
+        o_defer.promise.then(function(h_request_data){
+            //Static http request handling by application
+            //App have to send it bootload html + js code before having two-way communications
+            App.get_static(s_path, {pid: process.pid, requestData:h_request_data}, HttpContent) //Have to return a promise
+                .then(function (o_content) { //Split HttpContent object
+                    return [o_content.render(APP_PATH + rh_config_from_app.httpcontent.render_path), o_content.get_code(), o_content.get_type()];
+                })
+                .spread(function (s_content, i_code, s_type) { //Send HttpContent to client
+                    o_res.writeHead(i_code, {//TODO Allow headers to be dynamic by adding headers hash to HttpContent.headers
+                        'Content-Type': s_type,
+                        'Content-Length': s_content.length
+                    });
+                    o_res.write(s_content);
+                    o_res.end();
+                }).catch(function(o_error) { //On any error or reject, send 500 error
                 o_res.writeHead(500);
                 o_res.write(o_error.toString());
                 o_res.end();
             });
+        }).done();
     }).listen(0, 'localhost');
 
     //Bind abstract socket to http server
