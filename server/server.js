@@ -57,7 +57,23 @@ if(ro_cluster.isMaster) {
 
     //promise!
     const ro_q = require('q');
-    
+
+    //Get app notifier factory
+    var rf_get_notifier = require('./class/Notifier');
+
+    var oc_notifier = rf_get_notifier('server', function(OUTPUTS){
+        return {
+            info:[OUTPUTS.FILE,OUTPUTS.STDOUT],
+            warning:[OUTPUTS.FILE,OUTPUTS.STDOUT],
+            debug:[OUTPUTS.FILE,OUTPUTS.STDOUT]
+        };
+    });
+
+    if(typeof rh_config_from_app.server !== 'undefined' && typeof rh_config_from_app.server.reload !== 'undefined' && rh_config_from_app.reload){
+      oc_notifier.info('#' + process.pid + 'unload ' + APP_PATH + '/app' + ' from require cache ');
+      //Reload application
+      delete require.cache[require.resolve(APP_PATH+'/app')];
+    }
     //Our application
     const App = require(APP_PATH+'/app');
 
@@ -67,8 +83,8 @@ if(ro_cluster.isMaster) {
     //Get App Emitter
     var o_app_emitter = ro_balancer.get_app_emitter();
 
-    //Get app notifier factory
-    var rf_get_notifier = require('./class/Notifier');
+
+
 
     //Triggered instead killing process
     process.on('uncaughtException', function (o_error) {
@@ -83,11 +99,13 @@ if(ro_cluster.isMaster) {
     var o_internal_server = ro_http.createServer(function (o_req, o_res) {
         var o_defer = ro_q.defer();
         var s_path = ro_url.parse(o_req.url).pathname;
+        oc_notifier.debug('#' + process.pid + 'server path : '+ s_path +' request url : ' + o_req.url);
         o_app_emitter.send_heartbeat();
         var data = {
             method: '',
             value: ''
         };
+        oc_notifier.debug('#' + process.pid + ' get ' + o_req.method + 'request');
         switch (o_req.method){
             case 'POST':
                 data.method = 'POST';
@@ -104,7 +122,7 @@ if(ro_cluster.isMaster) {
                 o_defer.resolve(data);
                 break;
         }
-        
+
         o_defer.promise.then(function(h_request_data){
             //Static http request handling by application
             //App have to send it bootload html + js code before having two-way communications

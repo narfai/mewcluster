@@ -15,8 +15,7 @@
 FROM base/archlinux
 MAINTAINER Francois Cadeillan <francois@azsystem.fr>
 
-# Add cluster user
-RUN groupadd -r nodecluster && useradd -r -g nodecluster nodecluster
+ENV USER_UID 17000
 
 RUN pacman -Sy --force curl openssl --noconfirm --noprogressbar && \
 	pacman -S pacman --noconfirm --noprogressbar && \
@@ -31,21 +30,17 @@ RUN npm config --global set python /usr/bin/python2
 # Add and prepare cluster server data
 RUN mkdir -p /server/{pids,logs}
 ADD server /server
-RUN chown -R nodecluster:nodecluster /server
 WORKDIR /server
-RUN npm update
-RUN npm rebuild
+RUN npm install
 
 # Add and prepare app dir
 ADD app /app
-RUN chown -R nodecluster:nodecluster /app
 WORKDIR /app
-RUN npm update
-RUN npm rebuild
+RUN npm install
 
 # Volume configuration
-VOLUME /app
-VOLUME /server
+#VOLUME /app
+#VOLUME /server
 
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
     && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-amd64" \
@@ -55,12 +50,6 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4
     && rm -r /root/.gnupg/ \
     && chmod +x /usr/local/bin/gosu
 
-# Prepare entrypoint
-ADD entrypoint.sh /entrypoint.sh
-RUN chown nodecluster:nodecluster /entrypoint.sh
-RUN chmod u+x /entrypoint.sh
-ENTRYPOINT  ["/entrypoint.sh"]
-
 # Setting working directory
 WORKDIR /server
 
@@ -69,6 +58,11 @@ WORKDIR /server
 
 # Will listen on port 80 for http
 EXPOSE 8080
+
+# Prepare entrypoint
+ADD entrypoint.sh /entrypoint.sh
+RUN chmod u+x /entrypoint.sh
+ENTRYPOINT  ["/entrypoint.sh"]
 
 # CMD always at the end of file cause we can only have one by file
 CMD ["load"]
