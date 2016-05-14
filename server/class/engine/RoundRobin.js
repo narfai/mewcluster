@@ -34,7 +34,7 @@ RoundRobinEngine.prototype._spawn = function(i_index){
         o_worker = this.spawn();
 
     o_worker.on('exit', function(){
-        if(o_worker.suicide && (self.conf.respawn === true)) {
+        if(o_worker && o_worker.suicide && (self.conf.respawn === true)) {
             self._spawn(i_index);
         } else {
             self.worker_pool.slice(i_index, 1);

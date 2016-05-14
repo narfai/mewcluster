@@ -47,7 +47,7 @@ OnDemandEngine.prototype.get_worker = function(s_ip){
             self.worker_by_ip[s_ip] = i_worker_id;
 
             o_worker.on('exit', function(o_worker){
-                if(o_worker.suicide && (self.conf.respawn === true)) {
+                if(o_worker && o_worker.suicide && (self.conf.respawn === true)) {
                     self.worker_by_ip[s_ip] = self.spawn();
                 } else {
                     delete self.worker_by_ip[s_ip];
