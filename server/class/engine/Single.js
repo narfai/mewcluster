@@ -33,7 +33,7 @@ SingleEngine.prototype._spawn = function(){
         o_worker = self.spawn();
 
     o_worker.on('exit', function(o_worker){
-        if(_worker && o_worker.suicide && (self.conf.respawn === true)) {
+        if(o_worker && o_worker.suicide && (self.conf.respawn === true)) {
             self.worker = self._spawn();
         } else {
             self.worker = false;
