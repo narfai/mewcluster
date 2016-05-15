@@ -124,6 +124,7 @@ if(ro_cluster.isMaster) {
         }
 
         o_defer.promise.then(function(h_request_data){
+          console.log(h_request_data);
             //Static http request handling by application
             //App have to send it bootload html + js code before having two-way communications
             App.get_static(s_path, {pid: process.pid, requestData:h_request_data}, HttpContent) //Have to return a promise
@@ -154,12 +155,16 @@ if(ro_cluster.isMaster) {
         port: process.env.REDIS_PORT_6379_TCP_PORT
     }));
 
-    //Instanciate our application. Have to be before "bind_internal" allow app listeners to be triggered before server one's in event queue
-    new App({
-        emitter :o_app_emitter,
-        notifier_factory: rf_get_notifier,
-        io:o_io
-    });
+    try {
+      //Instanciate our application. Have to be before "bind_internal" allow app listeners to be triggered before server one's in event queue
+      new App({
+          emitter :o_app_emitter,
+          notifier_factory: rf_get_notifier,
+          io:o_io
+      });
+    } catch(o_error){
+      o_app_emitter.send_panic(o_error);
+    }
 
     //Allow balancer to relay TCP connexions to our internal server
     ro_balancer.bind_internal(o_internal_server, o_app_emitter);
