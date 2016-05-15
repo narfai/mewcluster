@@ -16,7 +16,7 @@ limitations under the License.*/
 
 var ro_fs = require('fs');
 var ro_jade = require('jade');
-var ro_hogan = require('hogan.js');
+var ro_hogan = require('hogan');
 var ro_q = require('q');
 var ro_path = require('path');
 
