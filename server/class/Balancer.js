@@ -79,8 +79,8 @@ Balancer.prototype.set_worker_timeout = function(o_worker){
                 clearTimeout(self.timeouts[o_worker.id]);
             }
             self.timeouts[o_worker.id] = setTimeout(function () {
-                oc_notifier.master_debug('Worker #' + o_worker.id + ' has reached his timeout');
-                self.exit(o_worker);
+              oc_notifier.master_debug('Worker #' + o_worker.id + ' has reached his timeout');
+              self.exit(o_worker);
             }, this.timeout);
         }
     }
@@ -327,14 +327,12 @@ Balancer.prototype.panic = function(o_worker, o_error){
     if(ro_cluster.isWorker){
         oc_notifier.worker_error('Worker #'+o_worker.id+' PID(#'+o_worker.process.pid+') send panic due to fatal error : ' + o_error.toString(), {error:o_error});
         if(o_worker.isConnected) {
-
             //Let master handle panic
             o_worker.send('panic');
         } else {
             process.exit(1);
         }
-    } else {
-
+    } else {  
         //Kill it
         o_worker.kill();
     }
@@ -353,9 +351,17 @@ Balancer.prototype.exit = function(o_worker){
         }
         process.exit(0);
     } else {
-
-        //Tell worker to exit
-        o_worker.send('exit');
+        try {
+          if(o_worker.isConnected()){
+            //Tell worker to exit
+            o_worker.send('exit');
+          } else {
+            throw new Error('already disconnected');
+          }
+        } catch(o_error) {
+          oc_notifier.worker_error('Error : Worker #' + o_worker.id + ' ' + o_error.toString() + ' : kill it', {'err': o_error});
+          o_worker.kill();
+        }
     }
 };
 
