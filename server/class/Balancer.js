@@ -332,7 +332,10 @@ Balancer.prototype.panic = function(o_worker, o_error){
         } else {
             process.exit(1);
         }
-    } else {  
+    } else {
+        if(o_worker.isConnected()){
+          o_worker.disconnect();
+        }
         //Kill it
         o_worker.kill();
     }
