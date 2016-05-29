@@ -1,6 +1,6 @@
 {
   "name": "mewcluster",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "main": "server.js",
   "dependencies": {
     "hogan": "^1.0.2",
