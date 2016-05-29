@@ -1,5 +1,5 @@
 {
-  "name": "nodecluster",
+  "name": "mewcluster",
   "version": "0.0.1",
   "main": "server.js",
   "dependencies": {
@@ -11,7 +11,11 @@
     "socket.io": "=1.4.5",
     "socket.io-redis": "=1.0.0"
   },
+  "scripts": {
+    "build": "bash ./script/build.sh",
+    "try" : "bash ./script/try.sh"
+  },
   "keywords": [],
-  "author": "narfai",
+  "author": "François Cadeillan",
   "homepage": ""
 }

@@ -28,19 +28,20 @@ RUN pacman -S make binutils gcc nodejs redis npm python2 --noconfirm --noprogres
 RUN npm config --global set python /usr/bin/python2
 
 # Add and prepare cluster server data
-RUN mkdir -p /server/{pids,logs}
-ADD server /server
+RUN mkdir -p /server/logs
+COPY . /server
 WORKDIR /server
 RUN npm install
 
 # Add and prepare app dir
-ADD app /app
+# ADD app /app
 WORKDIR /app
-RUN npm install
+# RUN npm install
 
 # Volume configuration
-#VOLUME /app
 #VOLUME /server
+VOLUME /app
+
 
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
     && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-amd64" \
@@ -60,7 +61,7 @@ WORKDIR /server
 EXPOSE 8080
 
 # Prepare entrypoint
-ADD entrypoint.sh /entrypoint.sh
+ADD docker/entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
 ENTRYPOINT  ["/entrypoint.sh"]
 

@@ -152,7 +152,8 @@ if(ro_cluster.isMaster) {
     //Bind redis socket per-user session
     o_io.adapter(rf_socket_io_redis({
         host: process.env.REDIS_PORT_6379_TCP_ADDR,
-        port: process.env.REDIS_PORT_6379_TCP_PORT
+        port: process.env.REDIS_PORT_6379_TCP_PORT,
+        upgrade: true,
     }));
     o_io.on('error', function(err){
       o_app_emitter.send_panic(o_error);

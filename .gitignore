@@ -30,8 +30,7 @@ ehthumbs.db
 Thumbs.db
 
 
-app/node_modules
-server/node_modules
-app/node_modules/*
-server/node_modules/*
-server/logs/*
+node_modules
+node_modules/*
+logs/*
+
