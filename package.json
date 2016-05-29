@@ -17,5 +17,6 @@
   },
   "keywords": [],
   "author": "François Cadeillan",
-  "homepage": ""
+  "homepage": "",
+  "license" : "Apache-2.0"
 }
